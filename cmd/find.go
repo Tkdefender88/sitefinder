@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Tkdefender88/sitefinder/browse"
 	"github.com/Tkdefender88/sitefinder/sites"
 	"github.com/spf13/cobra"
 )
@@ -53,6 +54,11 @@ to quickly create a Cobra application.`,
 		}
 
 		fmt.Printf("find: %s\n", site)
+		browser := browse.DefaultBrowse{}
+
+		if err := browser.Browse(site); err != nil {
+			return err
+		}
 
 		return nil
 	},

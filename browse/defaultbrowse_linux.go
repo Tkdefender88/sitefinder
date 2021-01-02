@@ -6,10 +6,10 @@ import (
 	"os/exec"
 )
 
-type LBrowser struct {
+type DefaultBrowse struct {
 }
 
-func (l LBrowser) Browse(url string) error {
+func (d DefaultBrowse) Browse(url string) error {
 	c := exec.Command("xdg-open", url)
 	
 	if err := c.Run(); err != nil {
