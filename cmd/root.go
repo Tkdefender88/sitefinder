@@ -17,14 +17,71 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var cfgFile string
+
+type ActFunc func()
+
+type model struct {
+	choices []string
+	cursor int
+	selected map[int]ActFunc
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "down", "j":
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+		case "enter", " ":
+			f, ok := m.selected[m.cursor]
+			if ok {
+				f()
+			}
+
+		}
+	}
+	return m, nil
+}
+
+func (m model) View() string {
+	s := "What would you like to do? \n\n"
+
+	for i, choice := range m.choices {
+		cursor := " " // no cursor
+		if m.cursor == i {
+			cursor = "*" // cursor!
+		}
+		//Render the row
+		s += fmt.Sprintf("%s %s\n", cursor, choice)
+	}
+
+	s += "\nPress q to quit.\n"
+
+	return s
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -39,8 +96,21 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
-	Run: func(cmd *cobra.Command, args []string) {
-		
+	RunE: func(cmd *cobra.Command, args []string) error {
+		initModel := model{
+			choices: []string{"find", "add", "delete"},
+			selected: map[int]ActFunc{
+				0: func() { fmt.Println("find") },
+				1: func() { fmt.Println("add") },
+				2: func() { fmt.Println("delete") },
+			},
+		}
+
+		p := tea.NewProgram(initModel)
+		if err := p.Start(); err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
